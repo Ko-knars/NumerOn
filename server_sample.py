@@ -1,5 +1,6 @@
 import socket
 import select
+import time
 
 def send_to(sock,msg):
     try:
@@ -35,7 +36,7 @@ digit = 3
 
 
 host = "127.0.0.1"
-port = 50008
+port = 50018
 backlog = 1
 bufsize = 4096
 
@@ -65,32 +66,43 @@ try:
 
     try:
         broadcast(sock_list, "ゲームを開始します")
+        time.sleep(1)
         broadcast(sock_list, "三桁の数値を入力してください")
-
-        player1_num_list = list(sock_list[0].recv(bufsize).decode('utf-8'))
-        player2_num_list = list(sock_list[1].recv(bufsize).decode('utf-8'))
+        player1_num = sock_list[0].recv(bufsize).decode('utf-8')
+        player1_num_list = list(player1_num)
+        broadcast([sock_list[0]], "player1の数値:" + str(player1_num))
+        player2_num = sock_list[1].recv(bufsize).decode('utf-8')
+        player2_num_list = list(player2_num)
+        broadcast([sock_list[1]], "player2の数値:" + str(player2_num))
         player = 0
-        print(player1_num_list)
+        
         while True:
             player = player + 1
             if player % 2 == 1:
+                broadcast([sock_list[0]], "予測値を入力してください")
                 input_prediction = sock_list[0].recv(bufsize).decode('utf-8')
                 ans = game(player2_num_list, list(input_prediction))
-                broadcast(sock_list, "player1:" + str(input_prediction))
+                broadcast(sock_list, "player1の予測値:" + str(input_prediction))
+                time.sleep(1)
                 broadcast(sock_list, ans)
-                print(ans)
                 if ans == "3EAT0BITE":
                     broadcast(sock_list, "player1の勝利です")
+                    time.sleep(1)
                     break
 
             elif player % 2 == 0:
+                broadcast([sock_list[1]], "予測値を入力してください")
                 input_prediction = sock_list[1].recv(bufsize).decode('utf-8')
                 ans = game(player1_num_list, list(input_prediction))
-                broadcast(sock_list, "player2:" + str(input_prediction))
+                broadcast(sock_list, "player2の予測値:" + str(input_prediction))
+                time.sleep(1)
                 broadcast(sock_list, ans)
                 if ans == "3EAT0BITE":
                     broadcast(sock_list, "player2の勝利です")
+                    time.sleep(1)
                     break
+        sock_list[0].close()
+        sock_list[1].close()
         server_sock.close()
     except:
         print("ゲーム中に予期せぬエラーが発生しました。")
