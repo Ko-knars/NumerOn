@@ -36,7 +36,7 @@ digit = 3
 
 
 host = "127.0.0.1"
-port = 50018
+port = 50019
 backlog = 1
 bufsize = 4096
 
@@ -83,8 +83,9 @@ try:
                 input_prediction = sock_list[0].recv(bufsize).decode('utf-8')
                 ans = game(player2_num_list, list(input_prediction))
                 broadcast(sock_list, "player1の予測値:" + str(input_prediction))
-                time.sleep(1)
+                time.sleep(0.5)
                 broadcast(sock_list, ans)
+                time.sleep(0.5)
                 if ans == "3EAT0BITE":
                     broadcast(sock_list, "player1の勝利です")
                     time.sleep(1)
@@ -95,8 +96,9 @@ try:
                 input_prediction = sock_list[1].recv(bufsize).decode('utf-8')
                 ans = game(player1_num_list, list(input_prediction))
                 broadcast(sock_list, "player2の予測値:" + str(input_prediction))
-                time.sleep(1)
+                time.sleep(0.5)
                 broadcast(sock_list, ans)
+                time.sleep(0.5)
                 if ans == "3EAT0BITE":
                     broadcast(sock_list, "player2の勝利です")
                     time.sleep(1)
