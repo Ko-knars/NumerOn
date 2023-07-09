@@ -3,27 +3,34 @@ import select
 import threading
 
 host = "127.0.0.1"
-port = 50008
+port = 50019
 bufsize = 4096
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 def send_msg(sock):
     while True:
         msg = input()
-        sock.send(msg.encode())
+        try:
+            sock.send(msg.encode())
+        except:
+            print("Connection closed")
+            break
+         
     
 
 def receive_msg(sock):
     while True:
-        r_ready_sockets,w_ready_sockets,e_ready_sockets = select.select([sock],[],[])
         try:
-            recev_msg = sock.recv(bufsize).decode()
-            print(recev_msg)
+            r_ready_sockets,w_ready_sockets,e_ready_sockets = select.select([sock],[],[], 0.5)
+            if r_ready_sockets:
+                recev_msg = sock.recv(bufsize).decode()
+                if recev_msg == '':
+                    print("Connection closed by server.")
+                    break
+                print(recev_msg)
         except:
+            print("Connection closed")
             break
-        #finally:
-            #sock.close()
-            #receive_msg("サーバとの接続が切断されました．")
 
 
 try:
