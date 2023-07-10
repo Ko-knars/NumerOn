@@ -37,14 +37,14 @@ bufsize = 4096
 
 server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 print("socket is created")
-
+#クライアント接続からゲームまで
 try:
     server_sock.bind((host,port))
     print("socket bind")
     server_sock.listen(backlog)
     print("socket listen")
     sock_list = []
-    
+    #クライアントと接続（クライアントは2人まで）
     while True:
         conn, address = server_sock.accept()
         if len(sock_list) < 2:
@@ -56,10 +56,11 @@ try:
         else:
             print("connection refuse")
             conn.close()
+    #ゲームの開始
     try:
         broadcast(sock_list, "ゲームを開始します")
         time.sleep(1)
-
+        #player1の数値を決定
         while True:
             broadcast([sock_list[0]], "三桁の数値を入力してください(数字はそれぞれ1つまで)")
             player1_num = sock_list[0].recv(bufsize).decode('utf-8')
@@ -69,7 +70,7 @@ try:
                 broadcast([sock_list[0]], "player1の数値:" + str(player1_num))
                 break
 
-
+        #player2の数値を決定
         while True:
             broadcast([sock_list[1]], "三桁の数値を入力してください(数字はそれぞれ1つまで)")
             player2_num = sock_list[1].recv(bufsize).decode('utf-8')
@@ -79,10 +80,11 @@ try:
                 break
 
 
+        #相手の数値を予測
         player = 0
-
         while True:
             player = player + 1
+            #player1の予測
             if player % 2 == 1:
                 while True:
                     broadcast([sock_list[0]], "予測値を入力してください")
@@ -98,7 +100,7 @@ try:
                     broadcast(sock_list, "player1の勝利です")
                     time.sleep(1)
                     break
-
+            #player2の予測
             elif player % 2 == 0:
                 while True:
                     broadcast([sock_list[1]], "予測値を入力してください")

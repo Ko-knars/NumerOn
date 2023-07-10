@@ -3,20 +3,11 @@ import select
 import threading
 
 host = "127.0.0.1"
-port = 50027
+port = 50028
 bufsize = 4096
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-def send_msg(sock):
-    while True:
-        msg = input()
-        try:
-            sock.send(msg.encode())
-        except:
-            print("Connection closed")
-            break
          
-
 def receive_msg(sock):
     while True:
         try:
@@ -76,7 +67,6 @@ def send():
             sock.send(number.encode())
         except:
             print("Connection closed")
-
         for label in labels:
             label.config(text='')
 

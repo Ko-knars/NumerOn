@@ -1,107 +1,102 @@
-import tkinter as tk
-import socket, select
+import socket
+import select
 import threading
 
-def send_msg(ev=None):
-    if len(entered_txt.get()) <= 0:
-        return
-    #if entered_txt.get().isspace():
-        #return
-    sock.send(entered_txt.get().encode())
-    #sock.send(er.encode())
-    etr.delete(0, tk.END)
- 
-    
-def receive_msg(msg):
-    if text_w is None:
-        return
-    text_w.config(state=tk.NORMAL)
-    text_w.insert(tk.END, msg + "\n")
-    text_w.config(state=tk.DISABLED)
-    text_w.see(tk.END)
-
-#サーバから送られてきたメッセージをストックする．
-def stock_msg(msg):
-    stocked_msg.append(msg)
-    
-#ストックされたメッセージに対してreceive_msgを呼び出す．
-def check_msg():
-    while len(stocked_msg) > 0:
-        receive_msg(stocked_msg.pop(0))
-    #after(time,func)
-    #funcの実行（呼び出し）をtime[ミリ秒]ごとに行う
-    text_w.after(200, check_msg)
-
-#サーバーから送信されたメッセージをストックする．
-def listen(host, port, sock, bufsize=4096):
-    try:
-        sock.connect((host,port))
-        while True:
-            r_ready_sockets,w_ready_sockets,e_ready_sockets = select.select([sock],[],[])
-            try:
-                recev_msg = sock.recv(bufsize).decode()
-                
-            except:
-                break
-            #直近receive_msgを呼び出すのではなく、stock_msgを呼び出してメッセージをストックしておく
-            stock_msg(recev_msg)
-            
-    except Exception as e:
-        print(e)
-    finally:
-        sock.close()
-        receive_msg("サーバとの接続が切断されました．")
-
-# GUIの構築 -----
-root = tk.Tk(None)
-root.title("サンプルチャット")
-
-frame = tk.Frame(master=root, width=480, height=320)
-
-label1 = tk.Label(master=frame, text="サンプルチャット", font=('メイリオ', '12'), bg="#cccccc")
-label1.place(relx=0, rely=0, relwidth=1.0, relheight=0.1)
-
-#複数行テキスト
-text_w = tk.Text(master=frame, state=tk.DISABLED, font=('メイリオ', '10'), bg="white")
-text_w.place(relx=0.05, rely=0.1, relwidth=0.85, relheight=0.7)
-
-#スクロールバー
-sb_y = tk.Scrollbar(master=frame, orient=tk.VERTICAL, command=text_w.yview)
-sb_y.place(relx=0.90, rely=0.1, relwidth=0.05, relheight=0.7)
-text_w.config(yscrollcommand=sb_y.set)
-
-#入力された文字列を扱うための文字列変数オブジェクト
-entered_txt = tk.StringVar()
-#er = "と発言しました"
-#1行編集テキスト
-etr = tk.Entry(master=frame, width = 30, textvariable = entered_txt)
-etr.bind('<Return>', send_msg)
-etr.place(relx = 0.05,rely = 0.85, relwidth = 0.65, relheight = 0.1)
-
-#ボタン
-bt = tk.Button(master = frame, text ="発言", bg = "skyblue", command = send_msg)
-bt.place(relx = 0.75,rely = 0.85, relwidth = 0.20, relheight = 0.1)
-
-frame.pack()
-
-# メッセージ通信の開始 -----
-host = '127.0.0.1'
-port = 50001
+host = "127.0.0.1"
+port = 50028
+bufsize = 4096
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-#送られてきたメッセージをストックするためのリスト
-stocked_msg = []
+#serverからメッセージを読み取る（スレッドで実行されており、また常にメッセージが受け取れるようにしている）
+def receive_msg(sock):
+    while True:
+        try:
+            r_ready_sockets,w_ready_sockets,e_ready_sockets = select.select([sock],[],[], 0.5)
+            if r_ready_sockets:
+                recev_msg = sock.recv(bufsize).decode()
+                if recev_msg == '':
+                    print("Connection closed by server.")
+                    break
+                text_box.insert(tk.END, recev_msg + "\n")
+        except:
+            print("Connection closed")
+            break
 
-#ストックされたメッセージを定期的に処理するcheck_msgを呼び出す
-check_msg()
+#ソケットの作成
+try:
+    sock.connect((host,port))    
+except Exception as e:
+    print(e)
 
-#サーバから送信されたメッセージを持つ処理を別のスレッドで制御する
-#threading.Threadのインスタンスを生成する
-#targetで指定したlistenをスレッドで処理する
 
-thrd = threading.Thread(target = listen, args = (host, port, sock))
-thrd.start()
+
+#GUI
+import tkinter as tk
+import tkinter.font as font
+
+root = tk.Tk()
+root.title('NumerOn')
+
+
+my_font = font.Font(family='Helvetica', size=20, weight='bold')
+
+#数値を表示するラベル
+labels = [tk.Label(root, text='', width=2, height=1, bg='white', font=my_font) for _ in range(3)]
+for i, label in enumerate(labels):
+    label.grid(row=0, column=i, padx=5, pady=5)
     
-    
-#GUIの表示
+#server からのメッセージを表示するテキストボックス
+text_box = tk.Text(root, width=20, height=20)
+text_box.grid(row=1, column=3, rowspan=4, padx=5, pady=5)
+
+#数値ボタンがクリックされたらその数値をラベルに表示させる
+def click(number):
+    for label in labels:
+        if label.cget('text') == '':
+            label.config(text=str(number))
+            break
+#Clearボタンがクリックされたらラベルの数値を左から消す
+def clear():
+    for label in reversed(labels):
+        if label.cget('text') != '':
+            label.config(text='')
+            break
+#Callボタンがクリックされたらserverにメッセージを送る
+def send():
+    #すべてのラベルに数値が入っているかの判定
+    if all(label.cget('text') != '' for label in labels):
+        number = ''.join(label.cget('text') for label in labels)
+        #serverに入力された数値を送る
+        try:
+            sock.send(number.encode())
+        except:
+            print("Connection closed")
+        #ラベルの数値を全消去
+        for label in labels:
+            label.config(text='')
+
+#電卓のような数値ボタンの配列
+button_texts = [
+    ['7', '8', '9'],
+    ['4', '5', '6'],
+    ['1', '2', '3'],
+    ['0', 'Clear', 'Call']
+]
+for i, row in enumerate(button_texts):
+    for j, text in enumerate(row):
+        if text.isdigit():
+            button = tk.Button(root, text=text, command=lambda number=text: click(number), font=my_font, width=5, height=2)
+        else:
+            button = tk.Button(root, text=text, command=clear if text == 'Clear' else send, font=my_font, width=5, height=2)
+        button.grid(row=i+1, column=j, sticky='nsew', padx=5, pady=5)
+
+
+for i in range(3):
+    root.grid_columnconfigure(i, weight=1)
+for i in range(5):
+    root.grid_rowconfigure(i, weight=1)
+
+#スレッドを作成し、serverからのメッセージを常に受け取れるようにする
+receive_thrd = threading.Thread(target = receive_msg, args = (sock,))
+receive_thrd.start()
 root.mainloop()
