@@ -8,34 +8,30 @@ def send_to(sock,msg):
     except:
         sock.close()
         return False
-
+        
 def broadcast(sock_list, msg):
     for sock in sock_list:
         if not send_to(sock,msg):
             sock_list.remove(sock)
-
+            
 def game(player,prediction):
     eats = 0
     bites = 0
-
     for i in range(digit):
         prediction_num = prediction[i]
         if player[i] == prediction_num:
             eats = eats + 1
-        
         if any(prediction_num  in player[j] for j in range(digit)):
             bites = bites + 1
-
     return str(eats) + "EAT" + str(bites-eats) + "BITE"
-
-
+    
 player1_num_list = []
 player2_num_list = []
 digit = 3
 
 
 host = "127.0.0.1"
-port = 50027
+port = 50028
 backlog = 1
 bufsize = 4096
 
@@ -48,13 +44,11 @@ try:
     server_sock.listen(backlog)
     print("socket listen")
     sock_list = []
-    client_sock_table = {}
     
     while True:
         conn, address = server_sock.accept()
         if len(sock_list) < 2:
             sock_list.append(conn)
-            client_sock_table[address[1]] = conn
             broadcast(sock_list, "ポート" + str(address[1]) + "")
             print(str(address) + "is connected")
             if len(sock_list) == 2:
@@ -62,21 +56,20 @@ try:
         else:
             print("connection refuse")
             conn.close()
-
     try:
         broadcast(sock_list, "ゲームを開始します")
         time.sleep(1)
-        
+
         while True:
             broadcast([sock_list[0]], "三桁の数値を入力してください(数字はそれぞれ1つまで)")
             player1_num = sock_list[0].recv(bufsize).decode('utf-8')
-                
+
             if len(list(player1_num)) == len(set(player1_num)) and len(player1_num) == 3:
                 player1_num_list = list(player1_num)
                 broadcast([sock_list[0]], "player1の数値:" + str(player1_num))
                 break
-            
-        
+
+
         while True:
             broadcast([sock_list[1]], "三桁の数値を入力してください(数字はそれぞれ1つまで)")
             player2_num = sock_list[1].recv(bufsize).decode('utf-8')
@@ -84,10 +77,10 @@ try:
                 player2_num_list = list(player2_num)
                 broadcast([sock_list[1]], "player2の数値:" + str(player2_num))
                 break
-            
-        
+
+
         player = 0
-        
+
         while True:
             player = player + 1
             if player % 2 == 1:
@@ -129,9 +122,7 @@ try:
         sock_list[0].close()
         sock_list[1].close()
         server_sock.close()
-
 except Exception as e:
     print("Exception!")
     print(e)
     server_sock.close()
-
