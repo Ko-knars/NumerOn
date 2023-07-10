@@ -2,8 +2,8 @@ import socket
 import select
 import threading
 
-host = "127.0.0.1"
-port = 50028
+host = "10.65.254.84"
+port = 50036
 bufsize = 4096
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 

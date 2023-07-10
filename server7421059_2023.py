@@ -32,8 +32,8 @@ player2_num_list = []
 digit = 3
 
 
-host = "127.0.0.1"
-port = 50028
+host = "10.65.254.84"
+port = 50036
 backlog = 1
 bufsize = 4096
 
