@@ -8,7 +8,6 @@ def game(player,prediction):
 
     for i in range(digit):
         prediction_num = prediction[i]
-        print(prediction_num)
         if player[i] == prediction_num:
             eats = eats + 1
         
@@ -20,7 +19,6 @@ def game(player,prediction):
 player = 1
 
 while True:
-    
     if player % 2 == 1:
         input_prediction = list(input("予測値を入力してください（player1）"))
         ans = game(player2_num_list, input_prediction)
